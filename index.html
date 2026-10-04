@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Moldes de Nail Art editables</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{--bg:#f1edf6;--panel:#fff;--ink:#2a2038;--mut:#6d6280;--acc:#c2255c;--line:#ddd5e8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1624;--panel:#262033;--ink:#f1eaf8;--mut:#a99bc0;--acc:#ff6fa3;--line:#3b3150}}
+:root[data-theme="dark"]{--bg:#1b1624;--panel:#262033;--ink:#f1eaf8;--mut:#a99bc0;--acc:#ff6fa3;--line:#3b3150}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Bricolage Grotesque',system-ui,sans-serif}
+header{padding:20px 16px 0;max-width:1300px;margin:auto}
+h1{margin:0;font-size:clamp(26px,4vw,40px);font-weight:800;letter-spacing:-.02em}
+header p{margin:4px 0 0;color:var(--mut)}
+.app{display:grid;grid-template-columns:330px 1fr;gap:16px;padding:16px;max-width:1300px;margin:auto}
+@media(max-width:860px){.app{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:14px;align-self:start}
+.panel h3{margin:0 0 6px;font-size:14px;font-weight:600}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ws{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.ws label{font-size:11px;color:var(--mut);display:flex;flex-direction:column;gap:2px}
+input[type=number],select{width:100%;box-sizing:border-box;padding:6px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+input[type=range]{width:100%;accent-color:var(--acc)}
+.lab{font-size:12px;color:var(--mut);display:flex;justify-content:space-between}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:6px 10px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+button.main{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.th{padding:4px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px}
+.th svg{height:56px;width:auto;background:#fff;border-radius:6px}
+.cols{display:flex;gap:10px}.cols label{font-size:11px;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:2px}
+input[type=color]{width:44px;height:30px;padding:0;border:1px solid var(--line);border-radius:6px;background:none}
+.paper{background:#fff;border-radius:14px;border:1px solid var(--line);padding:14px;overflow-x:auto;color:#222}
+.paper h4{margin:10px 0 4px;font-size:13px;color:#555;font-weight:600}
+.paper svg{display:block}
+.hint{font-size:12px;color:var(--mut);margin:0}
+@page{size:letter;margin:10mm}
+@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@media print{header,.panel,.hint{display:none!important}body{background:#fff}.app{display:block;padding:0}.paper{border:0;padding:0;overflow:visible}.selo{display:none}}
+</style></head><body>
+<header><h1>Moldes de uñas editables</h1><p>Ajusta tamaño y forma de cada dedo, cambia el diseño y sube los tuyos. Imprime al 100% en tamaño Carta.</p></header>
+<div class="app">
+<div class="panel">
+ <div><h3>Forma</h3><div class="row" id="shapes"></div></div>
+ <div><h3>Ancho de cada dedo (mm)</h3><div class="ws" id="ws"></div></div>
+ <div><div class="lab"><span>Largo / ancho</span><b id="rv"></b></div><input type="range" id="ratio" min="1.2" max="2.4" step="0.05">
+  <div class="lab"><span>Escala de impresión</span><b id="sv"></b></div><input type="range" id="scale" min="50" max="250" step="5">
+  <div class="lab"><span>Zoom en pantalla (no afecta la impresión)</span><b id="zv"></b></div><input type="range" id="zoom" min="1" max="3" step="0.1"></div>
+ <div><h3>Colores</h3><div class="cols" id="cols"></div></div>
+ <div><h3>Uñas seleccionadas</h3><p class="hint" id="st"></p><div class="row" style="margin-top:6px"><button id="sall">Seleccionar las 10</button><button id="snone">Quitar selección</button></div></div>
+ <div><h3>Diseños</h3><div class="grid" id="grid"></div></div>
+ <div><h3>Mis diseños</h3><input type="file" id="file" accept="image/*" multiple>
+  <div id="imgctl" hidden><div class="lab"><span>Zoom de la imagen</span></div><input type="range" id="iz" min="0.5" max="3" step="0.05">
+  <div class="lab"><span>Mover horizontal</span></div><input type="range" id="ix" min="-50" max="50">
+  <div class="lab"><span>Mover vertical</span></div><input type="range" id="iy" min="-50" max="50">
+  <button id="del" style="margin-top:6px">Eliminar este diseño</button></div></div>
+ <div><h3>Impresión</h3><select id="mode"><option value="color">A color</option><option value="gray">Escala de grises</option><option value="out">Solo contorno (para calcar o pintar)</option></select></div>
+ <div class="row"><button class="main" id="pdf">Descargar PDF tamaño real</button><button id="print">Imprimir</button><button id="reset">Restablecer</button></div><p class="hint" id="msg"></p>
+</div>
+<div>
+ <div class="paper"><h4>Mano izquierda · meñique a pulgar</h4><div id="r1"></div><h4>Mano derecha · pulgar a meñique</h4><div id="r2"></div><h4>Prueba de escala: la barra mide 5 cm y el cuadro 2 × 2 cm</h4><div id="sc"></div></div>
+ <p class="hint">Tus ajustes se guardan en este navegador. Mide tu uña en su parte más ancha y escribe ese valor en el dedo correspondiente.</p>
+</div></div>
+<script>
+const FN=['Meñique','Anular','Medio','Índice','Pulgar'];
+const SH={round:'Ovalada redondeada',oval:'Ovalada',square:'Cuadrada',almond:'Almendra',coffin:'Coffin',stiletto:'Stiletto'};
+const DN={liso:'Liso',french:'French',polka:'Puntos',rayas:'Rayas',ombre:'Ombré',cuadros:'Cuadros',corazones:'Corazones',estrellas:'Estrellas',flores:'Flores'};
+const DEF=()=>({w:[9,11,13,12,15],ratio:1.6,scale:100,shape:'oval',design:'french',target:'all',c:['#f3d9d0','#ffffff','#c2255c'],nails:Array(10).fill('french'),mode:'color',sel:[],nc:Array.from({length:10},()=>['#f3d9d0','#ffffff','#c2255c']),z:1,mine:[]});
+let S=DEF();
+try{const s=JSON.parse(localStorage.getItem('nailart'));if(s&&s.nails&&s.nails.length==10)S=Object.assign(DEF(),s)}catch(e){}
+const $=s=>document.querySelector(s),f=n=>+n.toFixed(2);
+if(!Array.isArray(S.sel))S.sel=[];if(!S.nc||S.nc.length!=10)S.nc=Array.from({length:10},()=>S.c.slice());
+function save(){try{localStorage.setItem('nailart',JSON.stringify(S))}catch(e){}}
+function P(sh,w,h){
+ if(sh=='round')return `M0 ${h/2}A${w/2} ${h/2} 0 0 1 ${w} ${h/2}A${w/2} ${h/2} 0 0 1 0 ${h/2}Z`;
+ if(sh=='oval')return `M0 ${h-w*.3}L0 ${w/2}A${w/2} ${w/2} 0 0 1 ${w} ${w/2}L${w} ${h-w*.3}Q${w} ${h} ${w*.7} ${h}L${w*.3} ${h}Q0 ${h} 0 ${h-w*.3}Z`;
+ if(sh=='square')return `M0 ${h}L0 1A1 1 0 0 1 1 0L${w-1} 0A1 1 0 0 1 ${w} 1L${w} ${h}Z`;
+ if(sh=='almond')return `M0 ${h}L0 ${h*.55}C0 ${h*.25} ${w*.35} 0 ${w/2} 0C${w*.65} 0 ${w} ${h*.25} ${w} ${h*.55}L${w} ${h}Z`;
+ if(sh=='coffin')return `M0 ${h}L0 ${h*.3}L${w*.2} 0L${w*.8} 0L${w} ${h*.3}L${w} ${h}Z`;
+ return `M0 ${h}L0 ${h*.5}L${w/2} 0L${w} ${h*.5}L${w} ${h}Z`}
+const star=(x,y,r)=>{let p='';for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,q=i%2?r*.42:r;p+=`${f(x+Math.cos(a)*q)},${f(y+Math.sin(a)*q)} `}return `<polygon points="${p}"/>`};
+const R=(w,h,c)=>`<rect width="${w}" height="${h}" fill="${c}"/>`;
+const D={
+liso:(w,h,c)=>R(w,h,c[0]),
+french:(w,h,c)=>R(w,h,c[0])+`<path d="M0 0H${w}V${h*.25}Q${w/2} ${h*.42} 0 ${h*.25}Z" fill="${c[1]}"/>`,
+polka:(w,h,c)=>{let s=R(w,h,c[0]);for(let j=0;j<6;j++)for(let i=0;i<3;i++)s+=`<circle cx="${w*(.25+.5*i+(j%2?.25:0))}" cy="${h*(.12+.17*j)}" r="${w*.1}" fill="${c[1]}"/>`;return s},
+rayas:(w,h,c)=>{let s=R(w,h,c[0])+`<g transform="rotate(35 ${w/2} ${h/2})" fill="${c[1]}">`;for(let k=-8;k<8;k++)s+=`<rect x="${k*w*.3}" y="${-h}" width="${w*.13}" height="${h*3}"/>`;return s+'</g>'},
+ombre:(w,h,c,u)=>`<defs><linearGradient id="g${u}" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[2]}"/></linearGradient></defs><rect width="${w}" height="${h}" fill="url(#g${u})"/>`,
+cuadros:(w,h,c)=>{let s=R(w,h,c[0]),q=w/3;for(let j=0;j<Math.ceil(h/q);j++)for(let i=0;i<3;i++)if((i+j)%2)s+=`<rect x="${i*q}" y="${j*q}" width="${q}" height="${q}" fill="${c[1]}"/>`;return s},
+corazones:(w,h,c)=>{let s=R(w,h,c[0]);[[.3,.25],[.7,.5],[.35,.78]].forEach(([a,b])=>s+=`<path transform="translate(${w*a} ${h*b}) scale(${w*.4})" d="M0 .35C-.6 -.1 -.35 -.55 0 -.2C.35 -.55 .6 -.1 0 .35Z" fill="${c[2]}"/>`);return s},
+estrellas:(w,h,c)=>{let s=R(w,h,c[0])+`<g fill="${c[2]}">`;[[.3,.25,.2],[.68,.5,.26],[.35,.78,.19]].forEach(([a,b,r])=>s+=star(w*a,h*b,w*r));return s+'</g>'},
+flores:(w,h,c)=>{let s=R(w,h,c[0]);[[.35,.28,.2],[.68,.62,.22]].forEach(([a,b,r])=>{const x=w*a,y=h*b,q=w*r;for(let k=0;k<5;k++){const t=k*1.2566;s+=`<circle cx="${f(x+Math.cos(t)*q)}" cy="${f(y+Math.sin(t)*q)}" r="${q*.62}" fill="${c[1]}"/>`}s+=`<circle cx="${x}" cy="${y}" r="${q*.5}" fill="${c[2]}"/>`});return s}};
+const mineOf=d=>S.mine.find(m=>'img:'+m.id===d);
+function design(d,w,h,u,c){
+ if(d.startsWith('img:')){const m=mineOf(d);if(!m)return R(w,h,'#eee');const iw=w*m.zoom,ih=h*m.zoom;
+  return R(w,h,'#fff')+`<image href="${m.src}" x="${(w-iw)/2+m.x/100*w}" y="${(h-ih)/2+m.y/100*h}" width="${iw}" height="${ih}" preserveAspectRatio="xMidYMid slice"/>`}
+ return (D[d]||D.liso)(w,h,c||S.c,u)}
+function nailG(w,h,d,u,c,t){const p=P(S.shape,w,h);if(S.mode=='out'&&!t)return `<path d="${p}" fill="none" stroke="#222" stroke-width=".3"/>`;return `<clipPath id="c${u}"><path d="${p}"/></clipPath><g clip-path="url(#c${u})">${design(d,w,h,u,c)}</g><path d="${p}" fill="none" stroke="#222" stroke-width=".3"/>`}
+function row(a,b,raw){let x=2,out='',mh=0;const it=[];
+ for(let i=a;i<b;i++){const fi=i<5?i:9-i,w=S.w[fi]*S.scale/100,h=w*S.ratio;it.push([i,fi,w,h]);mh=Math.max(mh,h)}
+ it.forEach(([i,fi,w,h])=>{out+=`<g transform="translate(${f(x)} 2)" data-i="${i}" style="cursor:pointer">${nailG(w,h,S.nails[i],'n'+i,S.nc[i])}`
+  +(S.sel.includes(i)?`<path class="selo" d="${P(S.shape,w,h)}" fill="none" stroke="#c2255c" stroke-width=".6" stroke-dasharray="1.2 .8" transform="translate(-.8 -.8) scale(${(w+1.6)/w} ${(h+1.6)/h})"/>`:'')
+  +`<text x="${w/2}" y="${mh+4.5}" font-size="2.3" text-anchor="middle" fill="#555">${FN[fi]}</text><text x="${w/2}" y="${mh+7.3}" font-size="2.3" text-anchor="middle" fill="#888">${f(w)} mm</text></g>`;x+=w+6});
+ const W=x-4,H=mh+10;const o2=S.mode=='gray'?`<defs><filter id="gs"><feColorMatrix type="saturate" values="0"/></filter></defs><g filter="url(#gs)">${out}</g>`:out;if(raw)return{out:o2,W,H};return `<svg viewBox="0 0 ${f(W)} ${f(H)}" width="${f(W*S.z)}mm" height="${f(H*S.z)}mm">${o2}</svg>`}
+function render(){
+ $('#r1').innerHTML=row(0,5);$('#r2').innerHTML=row(5,10);
+ $('#sc').innerHTML=`<svg viewBox="0 0 76 24" width="${76*S.z}mm" height="${24*S.z}mm"><rect x="1" y="2" width="50" height="3" fill="#222"/><text x="1" y="9" font-size="2.5" fill="#555">50 mm</text><rect x="55" y="2" width="20" height="20" fill="none" stroke="#222" stroke-width=".3"/></svg>`;
+ $('#rv').textContent=S.ratio;$('#sv').textContent=S.scale+'%';$('#zv').textContent=S.z+'×';save()}
+const cur=()=>S.nc[S.sel.length?S.sel[0]:0];
+function thumbs(){
+ let h='';const all=[...Object.keys(DN).map(k=>[k,DN[k]]),...S.mine.map((m,i)=>['img:'+m.id,'Mío '+(i+1)])];
+ all.forEach(([d,n],k)=>h+=`<button class="th ${S.design==d?'on':''}" data-d="${d}"><svg viewBox="-1 -1 11 17">${nailG(9,14,d,'t'+k,cur(),1)}</svg>${n}</button>`);
+ $('#grid').innerHTML=h;const m=mineOf(S.design);$('#imgctl').hidden=!m;
+ if(m){$('#iz').value=m.zoom;$('#ix').value=m.x;$('#iy').value=m.y}}
+function status(){$('#st').textContent=S.sel.length?'Los cambios de diseño y color van a las uñas: '+S.sel.map(i=>i+1).join(', ')+'. Toca una uña para añadirla o quitarla.':'Sin selección: los cambios van a las 10 uñas. Toca una uña para elegirla.'}
+function syncCols(){document.querySelectorAll('#cols input').forEach(el=>el.value=cur()[el.dataset.c])}
+function setDesign(d){(S.sel.length?S.sel:[0,1,2,3,4,5,6,7,8,9]).forEach(i=>S.nails[i]=d);S.design=d;thumbs();render()}
+// controles
+$('#shapes').innerHTML=Object.entries(SH).map(([k,v])=>`<button data-s="${k}">${v}</button>`).join('');
+$('#shapes').onclick=e=>{const k=e.target.dataset.s;if(!k)return;S.shape=k;marks();thumbs();render()};
+function marks(){document.querySelectorAll('#shapes button').forEach(b=>b.classList.toggle('on',b.dataset.s==S.shape))}
+$('#ws').innerHTML=FN.map((n,i)=>`<label>${n.slice(0,3)}<input type="number" step="0.5" min="5" max="30" data-i="${i}"></label>`).join('');
+document.querySelectorAll('#ws input').forEach(el=>{el.value=S.w[el.dataset.i];el.oninput=()=>{const v=parseFloat(el.value);if(v>0){S.w[el.dataset.i]=v;render()}}});
+$('#cols').innerHTML=['Base','Segundo','Acento'].map((n,i)=>`<label>${n}<input type="color" data-c="${i}" value="${cur()[i]}"></label>`).join('');
+document.querySelectorAll('#cols input').forEach(el=>el.oninput=()=>{(S.sel.length?S.sel:[...Array(10).keys()]).forEach(i=>S.nc[i][el.dataset.c]=el.value);thumbs();render()});
+[['ratio','ratio'],['scale','scale'],['zoom','z']].forEach(([id,k])=>{const el=$('#'+id);el.value=S[k];el.oninput=()=>{S[k]=parseFloat(el.value);render()}});
+const pick=a=>{S.sel=a;status();syncCols();thumbs();render()};$('#sall').onclick=()=>pick([0,1,2,3,4,5,6,7,8,9]);$('#snone').onclick=()=>pick([]);
+$('#grid').onclick=e=>{const b=e.target.closest('[data-d]');if(b)setDesign(b.dataset.d)};
+$('#r1').onclick=$('#r2').onclick=e=>{const g=e.target.closest('[data-i]');if(g){const i=+g.dataset.i;pick(S.sel.includes(i)?S.sel.filter(x=>x!=i):[...S.sel,i])}};
+$('#file').onchange=e=>{const fs=[...e.target.files];let n=0;fs.forEach((fl,k)=>{const r=new FileReader();r.onload=()=>{const id=Date.now()+k;S.mine.push({id,name:fl.name,src:r.result,zoom:1,x:0,y:0});if(++n==fs.length)setDesign('img:'+id)};r.readAsDataURL(fl)});e.target.value=''};
+[['iz','zoom'],['ix','x'],['iy','y']].forEach(([id,k])=>$('#'+id).oninput=e=>{const m=mineOf(S.design);if(m){m[k]=parseFloat(e.target.value);thumbs();render()}});
+$('#del').onclick=()=>{const m=mineOf(S.design);if(!m)return;S.mine=S.mine.filter(x=>x!==m);S.nails=S.nails.map(d=>d=='img:'+m.id?'liso':d);S.design='liso';thumbs();render()};
+$('#mode').value=S.mode;$('#mode').onchange=e=>{S.mode=e.target.value;thumbs();render()};
+$('#print').onclick=()=>window.print();
+$('#reset').onclick=()=>{S=DEF();try{localStorage.removeItem('nailart')}catch(e){}location.reload()};
+let sv0;$('#pdf').onclick=async()=>{const m=$('#msg');m.textContent='Generando PDF…';
+ try{const dl=await claude.use('downloads');if(!dl){m.textContent='Aquí no se puede descargar: usa Imprimir y elige Guardar como PDF.';return}
+  const a=row(0,5,1),b=row(5,10,1),PW=215.9,PH=279.4,K=11.811;
+  if(Math.max(a.W,b.W)>PW-12){m.textContent='Las uñas no caben en una hoja Carta a esta escala. Baja la escala o los anchos.';return}
+  const svg=sv0=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${PW} ${PH}" width="${Math.round(PW*K)}" height="${Math.round(PH*K)}" font-family="sans-serif"><rect width="${PW}" height="${PH}" fill="#fff"/><text x="10" y="12" font-size="4.5" fill="#222">Moldes de uñas · tamaño real (imprime al 100%)</text><text x="10" y="21" font-size="3" fill="#555">Mano izquierda</text><g transform="translate(8 23)">${a.out}</g><text x="10" y="${35+a.H}" font-size="3" fill="#555">Mano derecha</text><g transform="translate(8 ${37+a.H})">${b.out}</g><g transform="translate(10 ${PH-24})"><rect width="50" height="3" fill="#222"/><text y="8" font-size="2.5" fill="#555">50 mm</text><rect x="60" width="20" height="20" fill="none" stroke="#222" stroke-width=".3"/></g></svg>`;
+  const im=new Image();im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);await im.decode();
+  const cv=document.createElement('canvas');cv.width=Math.round(PW*K);cv.height=Math.round(PH*K);const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height);x.drawImage(im,0,0,cv.width,cv.height);
+  const pdf=new window.jspdf.jsPDF({unit:'mm',format:'letter'});pdf.addImage(cv.toDataURL('image/jpeg',.92),'JPEG',0,0,PW,PH);
+  await dl.save({filename:'moldes-nail-art.pdf',data:pdf.output('blob')});m.textContent='PDF listo.'}
+ catch(e){if(e&&e.code=='declined'){m.textContent='Descarga cancelada.';return}try{if(sv0){const dl=await claude.use('downloads');await dl.save({filename:'moldes-nail-art.svg',data:new Blob([sv0],{type:'image/svg+xml'})});m.textContent='No se pudo armar el PDF; guardé la plantilla como SVG. Ábrela e imprímela al 100%.';return}}catch(e2){}m.textContent='No se pudo generar el PDF. Usa Imprimir y elige Guardar como PDF.'}};
+let z0=1;addEventListener('beforeprint',()=>{z0=S.z;S.z=1;render()});addEventListener('afterprint',()=>{S.z=z0;render()});
+marks();status();thumbs();render();
+</script></body></html>
